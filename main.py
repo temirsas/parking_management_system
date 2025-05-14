@@ -11,7 +11,8 @@ def menu():
         print("\n🚘 PARKING MANAGEMENT SYSTEM")
         print("1. Въезд автомобиля")
         print("2. Выезд автомобиля")
-        print("3. Выход")
+        print("3. Просмотр всех мест")
+        print("4. Выход")
         choice = input("Выберите действие: ")
 
         if choice == "1":
@@ -22,6 +23,8 @@ def menu():
             plate = input("Введите номер авто: ")
             controller.exit_parking(plate)
         elif choice == "3":
+            controller.view_all_slots()
+        elif choice == "4":
             print("👋 До свидания!")
             break
         else:

@@ -7,6 +7,22 @@ from model.ticket import Ticket
 
 class ParkingController:
 
+    def view_all_slots(self):
+        slots = ParkingSlotDAO.get_all_slots_with_vehicles()
+
+        if not slots:
+            print("📦 Нет парковочных мест.")
+            return
+
+        print("\n📍 Список всех парковочных мест:")
+        for slot in slots:
+            status = "ЗАНЯТО" if slot["is_occupied"] else "СВОБОДНО"
+            vehicle_info = (
+                f"Авто: {slot['license_plate']} ({slot['vehicle_type']})"
+                if slot["is_occupied"] else "Свободно"
+            )
+            print(f"Slot #{slot['slot_id']} | Тип: {slot['slot_type']} | Статус: {status} | {vehicle_info}")
+
     def enter_parking(self, license_plate, vehicle_type):
         existing_vehicle = VehicleDAO.get_vehicle_by_plate(license_plate)
         if existing_vehicle:
@@ -15,9 +31,25 @@ class ParkingController:
                 print("❗ Автомобиль уже на парковке.")
                 return
 
-        slot = ParkingSlotDAO.get_available_slot(vehicle_type)
-        if not slot:
+        available_slots = ParkingSlotDAO.get_all_available_slots(vehicle_type)
+        if not available_slots:
             print("🚫 Нет свободных мест для типа:", vehicle_type)
+            return
+
+        print("🔓 Доступные слоты:")
+        for slot in available_slots:
+            print(f" - Slot #{slot.slot_id}")
+
+        selected_slot_id = input("Введите номер слота для парковки: ").strip()
+        try:
+            selected_slot_id = int(selected_slot_id)
+        except ValueError:
+            print("❌ Неверный номер слота.")
+            return
+
+        slot = next((s for s in available_slots if s.slot_id == selected_slot_id), None)
+        if not slot:
+            print("❌ Такого свободного слота нет.")
             return
 
         if not existing_vehicle:
@@ -29,8 +61,8 @@ class ParkingController:
 
         ticket = Ticket(ticket_id=None, vehicle_id=vehicle_id, slot_id=slot.slot_id)
         TicketDAO.create_ticket(ticket)
-
         ParkingSlotDAO.update_slot_status(slot.slot_id, True)
+
         print(f"✅ Авто {license_plate} успешно припарковано на месте #{slot.slot_id}")
 
     def exit_parking(self, license_plate):
